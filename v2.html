@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Ratings Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #chartContainer {
+            width: 90%;
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            width: 100% !important;
+            height: 400px !important;
+        }
+        #averageRating {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        @media print {
+            button { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Monthly Ratings Chart</h1>
+    <label for="month">Enter Month:</label>
+    <input type="text" id="month" placeholder="e.g., January">
+    <br>
+    <label for="ratings">Enter Ratings (comma separated, 1-10):</label>
+    <input type="text" id="ratings" placeholder="e.g., 5, 7, 8, 6, 9">
+    <br>
+    <button onclick="generateChart()">Generate Chart</button>
+    <button onclick="window.print()">Print Chart</button>
+    <div id="chartContainer">
+        <canvas id="ratingsChart"></canvas>
+    </div>
+    <div id="averageRating"></div>
+
+    <script>
+        let ratingsChartInstance = null;
+
+        function generateChart() {
+            let month = document.getElementById('month').value;
+            let ratingsInput = document.getElementById('ratings').value;
+            let ratings = ratingsInput.split(',').map(num => parseFloat(num.trim()));
+
+            if (!month || ratings.some(isNaN) || ratings.length === 0) {
+                alert('Please enter a valid month and numeric ratings.');
+                return;
+            }
+
+            let days = Array.from({ length: ratings.length }, (_, i) => i + 1);
+            let average = (ratings.reduce((sum, val) => sum + val, 0) / ratings.length).toFixed(2);
+            document.getElementById('averageRating').innerText = `Monthly Average Rating for ${month}: ${average}`;
+
+            let ctx = document.getElementById('ratingsChart').getContext('2d');
+
+            if (ratingsChartInstance instanceof Chart) {
+                ratingsChartInstance.destroy();
+            }
+
+            ratingsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [{
+                        label: `Daily Ratings for ${month}`,
+                        data: ratings,
+                        borderColor: '#007BFF',
+                        borderWidth: 2,
+                        fill: true,
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        pointBackgroundColor: '#FF5733',
+                        pointRadius: 5,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuad'
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Ratings Trend for ${month}`,
+                            font: { size: 18, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Days'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            title: {
+                                display: true,
+                                text: 'Rating (0-10)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
